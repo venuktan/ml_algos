@@ -11,8 +11,6 @@ class Main:
 
 class LogisticRegressionTf:
     def __init__(self, dims, learning_rate, batch_size, iter_num, seed=None):
-        if seed:
-            np.random.seed(seed)
 
         self.learning_rate = learning_rate
         self.batch_size = batch_size
@@ -20,14 +18,15 @@ class LogisticRegressionTf:
         with tf.Graph().as_default() as self.g:
 
             self.global_step_tensor = tf.placeholder(tf.int64, name='global_step')
-            self.X = tf.placeholder(tf.float32, shape=[None, dims], name = "X")
-            self.y = tf.placeholder(tf.float32, shape=[None, 1], name = "y")
+            self.X = tf.placeholder(tf.float32, shape=[None, dims], name="X")
+            self.y = tf.placeholder(tf.float32, shape=[None, 1], name="y")
+            if seed:
+                tf.set_random_seed(seed)
 
-            self.w = tf.Variable(tf.random_normal(shape=[dims, 1], mean=0.000001, stddev=0.0001, dtype=tf.float32,
-                                                  seed=seed), name="w")
-            self.b = tf.Variable(tf.random_normal(shape=[1, 1], mean=0.000001, stddev=0.0001, dtype=tf.float32,
-                                                  seed=seed), name="b")
-            # self.b = tf.Variable(tf.zeros(shape=[1, 1]), name="b")
+            self.w = tf.Variable(tf.random_normal(shape=[dims, 1], mean=0., stddev=0.5, dtype=tf.float32),
+                                 name="w")
+            self.b = tf.Variable(tf.random_normal(shape=[1, 1], mean=0., stddev=0.5, dtype=tf.float32),
+                                 name="b")
 
             self.model()
 
@@ -36,17 +35,17 @@ class LogisticRegressionTf:
         self.y_hat = tf.sigmoid(h)
         self.cost = -1*(self.y * tf.log(self.y_hat) + (1-self.y) * tf.log(1 - self.y_hat))
         self.loss = tf.reduce_mean(self.cost)
-        reg = (self.learning_rate/2) * tf.nn.l2_loss(self.w)
-        self.loss = self.loss + reg
+        # reg = (self.learning_rate/2) * tf.nn.l2_loss(self.w)
+        # reg = tf.contrib.slim.l2_regularizer(scale=0.05, scope=None)
+        # reg_penalty = tf.contrib.layers.apply_regularization(reg, tf.trainable_variables())
+        # self.loss = self.loss + reg_penalty
 
-        # reg = tf.contrib.layers.apply_regularization(tf.contrib.slim.l1_regularizer(.005), self.w)
-        # self.loss = self.loss + ((self.learning_rate/2) * tf.square(self.w))
-        # self.loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=h, labels=self.y))
+        self.loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=h, labels=self.y))
 
-        # self.optimizer = tf.train.AdagradDAOptimizer(self.learning_rate, l2_regularization_strength=.8,
-        #                                              l1_regularization_strength=.2,
-        #                                              global_step=tf.get_default_graph().get_tensor_by_name("global_step:0"))
-        self.optimizer = tf.train.GradientDescentOptimizer(self.learning_rate)
+        self.optimizer = tf.train.AdagradDAOptimizer(self.learning_rate, l2_regularization_strength=.8,
+                                                     l1_regularization_strength=.2,
+                                                     global_step=tf.get_default_graph().get_tensor_by_name("global_step:0"))
+        # self.optimizer = tf.train.GradientDescentOptimizer(self.learning_rate)
         self.goal = self.optimizer.minimize(self.loss)
 
         self.prediction = tf.round(self.y_hat)
@@ -95,5 +94,5 @@ class HabermanData:
 if __name__ == '__main__':
     data = HabermanData()
 
-    lr = LogisticRegressionTf(dims=3, learning_rate=0.08, batch_size=40, iter_num=100)
+    lr = LogisticRegressionTf(dims=3, learning_rate=0.008, batch_size=40, iter_num=100, seed=None)
     g, loss_trace, train_acc, test_acc = lr.train(data.train_x, data.train_y, data.test_x, data.test_y)
