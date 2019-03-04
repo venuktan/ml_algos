@@ -34,7 +34,6 @@ class LogisticRegressionTf:
         # self.loss = self.loss + reg_penalty
 
         self.loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=h, labels=self.y))
-
         self.optimizer = tf.train.AdagradDAOptimizer(self.learning_rate, l2_regularization_strength=.8,
                                                      l1_regularization_strength=.2,
                                                      global_step=tf.get_default_graph().get_tensor_by_name("global_step:0"))
