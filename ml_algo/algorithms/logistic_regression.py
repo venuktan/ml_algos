@@ -59,6 +59,7 @@ class LogisticRegressionTf:
                 batch_train_X = train_x[batch_indexes]
                 batch_train_y = np.matrix(train_y[batch_indexes])
 
+                sess.run(self.goal, feed_dict={"X:0": batch_train_X, "y:0": batch_train_y, "global_step:0":epoch })
                 batch_loss = sess.run(self.loss, feed_dict={"X:0": batch_train_X, "y:0": batch_train_y, "global_step:0":epoch })
                 batch_train_acc = sess.run(self.accuracy, feed_dict={"X:0": train_x, "y:0": train_y, "global_step:0":epoch})
                 batch_test_acc = sess.run(self.accuracy, feed_dict={"X:0": test_x, "y:0": test_y,"global_step:0":epoch})
@@ -67,7 +68,8 @@ class LogisticRegressionTf:
                 train_acc.append(batch_train_acc)
                 test_acc.append(batch_test_acc)
 
-                if (epoch + 1) % 2 == 0:
-                    print('epoch: {:4d} loss: {:5f} train_acc: {:5f} test_acc: {:5f}'.format(epoch + 1, batch_loss, batch_train_acc, batch_test_acc))
-                    # print('epoch: {} loss: {} train_acc: {} test_acc: {}'.format(epoch + 1, batch_loss, batch_train_acc, batch_test_acc))
+                if (epoch + 1) % 20 == 0:
+                    print("epoch: {} loss: {} train_acc: {} test_acc: {} ".format(epoch + 1, batch_loss,
+                                                                                  batch_train_acc, batch_test_acc))
+                    # print('epoch: {:4d} loss: {:5f} train_acc: {:5f} test_acc: {:5f}'.format(epoch + 1, batch_loss, batch_train_acc, batch_test_acc))
         return self.g, loss_trace, train_acc, test_acc

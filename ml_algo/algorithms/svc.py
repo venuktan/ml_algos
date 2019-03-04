@@ -34,18 +34,18 @@ class SvcTf:
         # self.loss = tf.reduce_mean(self.cost, name="loss")
 
         classification_term = tf.reduce_mean(tf.maximum(0., tf.subtract(1., tf.multiply(h, self.y))))
-        loss = tf.add(classification_term, l2_norm, name="loss")
+        self.loss = tf.add(classification_term, l2_norm, name="loss")
 
         # self.optimizer = tf.train.AdagradDAOptimizer(self.learning_rate, l2_regularization_strength=.8,
         #                                              l1_regularization_strength=.2,
         #                                              global_step=tf.get_default_graph().get_tensor_by_name("global_step:0"))
         self.optimizer = tf.train.GradientDescentOptimizer(self.learning_rate)
-        self.goal = self.optimizer.minimize(loss)
+        self.goal = self.optimizer.minimize(self.loss, name="goal")
 
 
         self.prediction = tf.sign(h)
         correct = tf.cast(tf.equal(self.prediction, self.y), dtype=tf.float32)
-        self.accuracy = tf.reduce_mean(correct,name="accuracy")
+        self.accuracy = tf.reduce_mean(correct, name="accuracy")
 
         return
 
@@ -63,12 +63,14 @@ class SvcTf:
                 batch_train_X = train_x[batch_indexes]
                 batch_train_y = np.matrix(train_y[batch_indexes])
 
-                batch_loss = sess.run("loss:0", feed_dict={"X:0": batch_train_X, "y:0": batch_train_y,
+                sess.run(self.goal, feed_dict={"X:0": batch_train_X, "y:0": batch_train_y,
                                                             "global_step:0":epoch, "C:0": C, "alpha:0":alpha})
-                batch_train_acc = sess.run("accuracy:0", feed_dict={"X:0": train_x, "y:0": train_y,
+                batch_loss = sess.run(self.loss, feed_dict={"X:0": batch_train_X, "y:0": batch_train_y,
+                                                            "global_step:0":epoch, "C:0": C, "alpha:0":alpha})
+                batch_train_acc = sess.run(self.accuracy, feed_dict={"X:0": train_x, "y:0": train_y,
                                                                      "global_step:0":epoch, "C:0": C, "alpha:0":alpha})
-                batch_test_acc = sess.run("accuracy:0", feed_dict={"X:0": test_x, "y:0": test_y,
-                                                                    "global_step:0":epoch, "C:0": C, "alpha:0":alpha})
+                batch_test_acc = sess.run(self.accuracy, feed_dict={"X:0": test_x, "y:0": test_y,
+                                                                    "global_step:0": epoch, "C:0": C, "alpha:0":alpha})
 
                 loss_trace.append(batch_loss)
                 train_acc.append(batch_train_acc)

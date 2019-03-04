@@ -6,11 +6,12 @@ from sklearn.svm  import SVC
 class Main:
     def __init__(self):
         data = HabermanData()
-        lr = SvcTf(dims=3, learning_rate=0.07, batch_size=500, iter_num=10, seed=None)
-        g, loss_trace, train_acc, test_acc = lr.train(data.train_x, data.train_y, data.test_x, data.test_y,
-                                                      C=3.5, alpha=.01)
 
-        # lr = LogisticRegressionTf(dims=3, learning_rate=0.008, batch_size=40, iter_num=100, seed=None)
+        lr = SvcTf(dims=3, learning_rate=0.03, batch_size=7, iter_num=100, seed=None)
+        g, loss_trace, train_acc, test_acc = lr.train(data.train_x, data.train_y, data.test_x, data.test_y,
+                                                      C=.5, alpha=.1)
+
+        # lr = LogisticRegressionTf(dims=3, learning_rate=0.09, batch_size=30, iter_num=100, seed=None)
         # g, loss_trace, train_acc, test_acc = lr.train(data.train_x, data.train_y, data.test_x, data.test_y)
 
         # svc = SVC()
