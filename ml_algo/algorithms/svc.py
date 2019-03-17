@@ -29,11 +29,7 @@ class SvcTf:
         h = tf.subtract(tf.matmul(self.X, self.w), self.b, name="h")
         l2_norm = tf.multiply(self.alpha, tf.reduce_sum(tf.square(self.w)), name="l2_norm")
 
-        # self.loss = tf.add(l2_norm, tf.multiply(self.C, tf.reduce_sum(tf.maximum(0.,
-        #                                         tf.subtract(1., tf.multiply(h, self.y))))), name="cost")
-        # self.loss = tf.reduce_mean(self.cost, name="loss")
-
-        classification_term = tf.reduce_mean(tf.maximum(0., tf.subtract(1., tf.multiply(h, self.y))))
+        classification_term = tf.add(self.C ,tf.reduce_mean(tf.maximum(0., tf.subtract(1., tf.multiply(h, self.y)))))
         self.loss = tf.add(classification_term, l2_norm, name="loss")
 
         # self.optimizer = tf.train.AdagradDAOptimizer(self.learning_rate, l2_regularization_strength=.8,
@@ -42,14 +38,13 @@ class SvcTf:
         self.optimizer = tf.train.GradientDescentOptimizer(self.learning_rate)
         self.goal = self.optimizer.minimize(self.loss, name="goal")
 
-
         self.prediction = tf.sign(h)
         correct = tf.cast(tf.equal(self.prediction, self.y), dtype=tf.float32)
         self.accuracy = tf.reduce_mean(correct, name="accuracy")
 
         return
 
-    def train(self, train_x, train_y, test_x, test_y, C:int=1., alpha=.1):
+    def train(self, train_x, train_y, test_x, test_y, C: int = 1., alpha: float = .1, epoch_print: int = 5):
         loss_trace = []
         train_acc = []
         test_acc = []
@@ -72,12 +67,12 @@ class SvcTf:
                 batch_test_acc = sess.run(self.accuracy, feed_dict={"X:0": test_x, "y:0": test_y,
                                                                     "global_step:0": epoch, "C:0": C, "alpha:0":alpha})
 
-                loss_trace.append(batch_loss)
+                loss_trace.append(batch_loss[0])
                 train_acc.append(batch_train_acc)
                 test_acc.append(batch_test_acc)
 
-                if (epoch + 1) % 2 == 0:
-                    print("epoch: {} loss: {} train_acc: {} test_acc: {} ".format(epoch + 1, batch_loss,
+                if (epoch + 1) % epoch_print == 0:
+                    print("epoch: {} loss: {} train_acc: {} test_acc: {} ".format(epoch + 1, batch_loss[0][0],
                                                                                   batch_train_acc, batch_test_acc))
                     # print('epoch: {:4d} loss: {:5f} train_acc: {:5f} test_acc: {:5f}'.format(
                     #     epoch + 1, batch_loss, batch_train_acc, batch_test_acc))
